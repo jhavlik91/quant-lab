@@ -53,3 +53,25 @@ class BacktestResult:
     trades: list[Trade] = field(default_factory=list)
     equity_curve: list[EquityPoint] = field(default_factory=list)
 
+
+@dataclass(frozen=True)
+class GateRules:
+    min_trades: int = 20
+    min_sharpe: float = 0.8
+    max_drawdown: float = 0.30
+    min_profit_factor: float = 1.10
+    must_be_profitable: bool = True
+
+
+@dataclass(frozen=True)
+class DatasetSplit:
+    train_fraction: float = 0.60
+    validation_fraction: float = 0.20
+
+
+@dataclass
+class ValidationReport:
+    status: str
+    score: float
+    stages: dict[str, dict[str, float]]
+    rejection_reason: str | None = None

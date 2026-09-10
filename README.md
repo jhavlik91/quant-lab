@@ -18,6 +18,7 @@ python -m unittest discover -s tests
 quant-lab run examples/sma_cross.json examples/sample_ohlcv.csv --db quant_lab.db
 quant-lab job examples/job.json
 quant-lab list --db examples/quant_lab.db
+quant-lab validate examples/sma_cross.json examples/sample_ohlcv.csv
 ```
 
 The command prints the experiment ID and metrics. Every run hashes its hypothesis,
@@ -51,7 +52,16 @@ CSV columns are `date,open,high,low,close,volume`, sorted strictly by date.
 - Local SQLite is the MVP registry; its schema separates experiments, metrics,
   trades and equity points and can later be mapped to PostgreSQL.
 - Baselines: SMA crossover and buy-and-hold benchmark.
+- Baseline strategies: buy-and-hold, SMA crossover, momentum and mean reversion.
 - Tests cover look-ahead behavior, costs, metrics and persistence.
+
+## Sequential validation
+
+`quant-lab validate` divides chronological data into disjoint TRAIN (60%),
+VALIDATION (20%) and untouched VAULT (20%) segments. A strategy advances only
+when the preceding segment passes minimum trade count, Sharpe, drawdown,
+profit-factor and profitability gates. The resulting score is descriptive, not
+a guarantee of future returns.
 
 ## Running scheduled jobs
 

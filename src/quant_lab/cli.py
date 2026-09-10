@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from .registry import ExperimentRegistry
-from .runner import run_job, run_one
+from .runner import run_job, run_one, run_validation
 
 
 def main() -> None:
@@ -17,6 +17,9 @@ def main() -> None:
     run.add_argument("--db", default="quant_lab.db")
     job = sub.add_parser("job", help="Run a PAPER job manifest")
     job.add_argument("manifest")
+    validation = sub.add_parser("validate", help="Run sequential TRAIN/VALIDATION/VAULT gates")
+    validation.add_argument("hypothesis")
+    validation.add_argument("ohlcv")
     listing = sub.add_parser("list", help="List stored experiments")
     listing.add_argument("--db", default="quant_lab.db")
     listing.add_argument("--limit", type=int, default=20)
@@ -28,6 +31,8 @@ def main() -> None:
         output = run_one(Path(args.hypothesis), Path(args.ohlcv), Path(args.db))
     elif args.command == "job":
         output = run_job(Path(args.manifest))
+    elif args.command == "validate":
+        output = run_validation(Path(args.hypothesis), Path(args.ohlcv))
     elif args.command == "list":
         output = ExperimentRegistry(args.db).list_experiments(args.limit)
     else:

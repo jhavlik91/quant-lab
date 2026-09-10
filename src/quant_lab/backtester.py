@@ -4,7 +4,7 @@ from .metrics import cagr, max_drawdown, sharpe_ratio
 from .models import BacktestResult, Bar, EquityPoint, Hypothesis, Trade
 from .strategies import Strategy
 
-ENGINE_VERSION = "0.1.0"
+ENGINE_VERSION = "0.2.0"
 
 
 def run_backtest(h: Hypothesis, bars: list[Bar], strategy: Strategy) -> BacktestResult:
@@ -59,6 +59,9 @@ def run_backtest(h: Hypothesis, bars: list[Bar], strategy: Strategy) -> Backtest
     benchmark = [p.benchmark_equity for p in curve]
     total_fees = sum(t.fees for t in trades)
     total_slippage = sum(t.slippage for t in trades)
+    winners = [t for t in trades if t.pnl > 0]
+    gross_profit = sum(t.pnl for t in winners)
+    gross_loss = -sum(t.pnl for t in trades if t.pnl < 0)
     metrics = {
         "total_return": equity[-1] / equity[0] - 1,
         "cagr": cagr(equity, h.annualization_days),
@@ -67,8 +70,10 @@ def run_backtest(h: Hypothesis, bars: list[Bar], strategy: Strategy) -> Backtest
         "benchmark_return": benchmark[-1] / benchmark[0] - 1,
         "excess_return": equity[-1] / equity[0] - benchmark[-1] / benchmark[0],
         "trade_count": float(len(trades)),
+        "profit_factor": gross_profit / gross_loss if gross_loss else (1_000_000.0 if gross_profit else 0.0),
+        "win_rate": len(winners) / len(trades) if trades else 0.0,
+        "avg_trade": sum(t.pnl for t in trades) / len(trades) if trades else 0.0,
         "fees": total_fees,
         "slippage": total_slippage,
     }
     return BacktestResult(metrics, trades, curve)
-

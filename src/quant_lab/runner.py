@@ -9,6 +9,7 @@ from .data import load_ohlcv
 from .models import Hypothesis
 from .registry import ExperimentRegistry
 from .strategies import strategy_from
+from .validation import validate_strategy
 
 
 def run_one(hypothesis_path: Path, data_path: Path, database_path: Path) -> dict[str, object]:
@@ -36,3 +37,20 @@ def run_job(job_path: Path) -> dict[str, object]:
     for item in runs:
         results.append(run_one(base / item["hypothesis"], base / item["ohlcv"], database))
     return {"mode": "PAPER", "database": str(database), "completed": len(results), "runs": results}
+
+
+def run_validation(hypothesis_path: Path, data_path: Path) -> dict[str, object]:
+    payload = json.loads(hypothesis_path.read_text(encoding="utf-8"))
+    hypothesis = Hypothesis(**payload)
+    report = validate_strategy(
+        hypothesis,
+        load_ohlcv(data_path),
+        strategy_from(hypothesis.strategy, hypothesis.parameters),
+    )
+    return {
+        "mode": "PAPER",
+        "status": report.status,
+        "score": report.score,
+        "rejection_reason": report.rejection_reason,
+        "stages": report.stages,
+    }
