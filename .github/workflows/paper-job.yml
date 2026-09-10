@@ -1,0 +1,28 @@
+name: PAPER research job
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install .
+      - name: Run PAPER manifest
+        run: quant-lab job examples/job.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: quant-lab-paper-db
+          path: examples/quant_lab.db
+          retention-days: 30
+

@@ -1,0 +1,11 @@
+{
+  "mode": "PAPER",
+  "database": "quant_lab.db",
+  "runs": [
+    {
+      "hypothesis": "sma_cross.json",
+      "ohlcv": "sample_ohlcv.csv"
+    }
+  ]
+}
+

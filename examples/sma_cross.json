@@ -1,0 +1,2 @@
+{"id":"HYP-0001","name":"SMA trend baseline","strategy":"sma_cross","symbol":"SAMPLE","parameters":{"fast":2,"slow":3},"initial_cash":100000,"fees_bps":5,"slippage_bps":10,"annualization_days":252}
+
