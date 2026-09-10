@@ -1,0 +1,70 @@
+# Quant Lab v0.1
+
+A deliberately small, deterministic and **PAPER-only** quantitative research lab.
+It turns a structured JSON hypothesis plus historical OHLCV CSV data into a
+reproducible backtest stored in SQLite, including trades, equity curve, fees,
+slippage, Sharpe ratio, CAGR, maximum drawdown and a buy-and-hold benchmark.
+
+This is research software, not investment advice. It contains no broker adapter,
+credentials, live endpoint or order-submission capability.
+
+## Quick start
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+pip install -e '.[dev]'
+python -m unittest discover -s tests
+quant-lab run examples/sma_cross.json examples/sample_ohlcv.csv --db quant_lab.db
+quant-lab job examples/job.json
+quant-lab list --db examples/quant_lab.db
+```
+
+The command prints the experiment ID and metrics. Every run hashes its hypothesis,
+input data and engine version so the result can be reproduced and audited.
+
+## Hypothesis contract
+
+The first supported strategy is `sma_cross`. Signals are calculated at a day's
+close and executed at the **next day's open**, preventing same-bar look-ahead.
+
+```json
+{
+  "id": "HYP-0001",
+  "name": "SMA trend baseline",
+  "strategy": "sma_cross",
+  "symbol": "SAMPLE",
+  "parameters": {"fast": 3, "slow": 5},
+  "initial_cash": 100000,
+  "fees_bps": 5,
+  "slippage_bps": 10,
+  "annualization_days": 252
+}
+```
+
+CSV columns are `date,open,high,low,close,volume`, sorted strictly by date.
+
+## Scope and safety
+
+- Long-only, fully invested or cash; no leverage, shorts or options.
+- No network access and no live trading code.
+- Local SQLite is the MVP registry; its schema separates experiments, metrics,
+  trades and equity points and can later be mapped to PostgreSQL.
+- Baselines: SMA crossover and buy-and-hold benchmark.
+- Tests cover look-ahead behavior, costs, metrics and persistence.
+
+## Running scheduled jobs
+
+`examples/job.json` is a manifest for one or more reproducible PAPER runs. The
+included GitHub Actions workflow runs it weekly and keeps the SQLite database as
+a 30-day build artifact. A Docker image is also included for a persistent worker:
+
+```bash
+docker build -t quant-lab .
+docker run --rm -v "$PWD/data:/data" quant-lab job examples/job.json
+```
+
+For production, use an external PostgreSQL database before adding a web UI.
+Vercel is suitable for that future UI/API, but the backtest worker should run on
+a container job service: serverless local storage is temporary and research runs
+can exceed request-duration limits.
